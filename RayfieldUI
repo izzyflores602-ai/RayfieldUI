@@ -1,0 +1,227 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-------------------------------------------------
+-- WINDOW
+-------------------------------------------------
+local Window = Rayfield:CreateWindow({
+    Name = "Player Settings UI",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "Movement + Visuals + Camera + Graphics",
+    ConfigurationSaving = { Enabled = false }
+})
+
+-------------------------------------------------
+-- HELPERS
+-------------------------------------------------
+local function getHumanoid()
+    local char = player.Character or player.CharacterAdded:Wait()
+    return char:WaitForChild("Humanoid")
+end
+
+-------------------------------------------------
+-- MOVEMENT TAB
+-------------------------------------------------
+local MovementTab = Window:CreateTab("Movement", 4483362458)
+
+MovementTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = {16, 200},
+    Increment = 1,
+    CurrentValue = 16,
+    Callback = function(v)
+        getHumanoid().WalkSpeed = v
+    end
+})
+
+MovementTab:CreateSlider({
+    Name = "Jump Power",
+    Range = {50, 300},
+    Increment = 1,
+    CurrentValue = 50,
+    Callback = function(v)
+        local hum = getHumanoid()
+        hum.UseJumpPower = true
+        hum.JumpPower = v
+    end
+})
+
+-- Infinite Jump
+local infiniteJump = false
+
+MovementTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Callback = function(state)
+        infiniteJump = state
+    end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if infiniteJump then
+        getHumanoid():ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- Reset
+MovementTab:CreateButton({
+    Name = "Reset Character",
+    Callback = function()
+        local char = player.Character
+        if char then
+            char:BreakJoints()
+        end
+    end
+})
+
+-------------------------------------------------
+-- VISUALS TAB
+-------------------------------------------------
+local VisualTab = Window:CreateTab("Visuals", 4483362458)
+
+-- UI HIDE (your UI only)
+local function setUIHidden(state)
+    local pg = player:WaitForChild("PlayerGui")
+
+    for _, gui in ipairs(pg:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" then
+            gui.Enabled = not state
+        end
+    end
+end
+
+VisualTab:CreateToggle({
+    Name = "Hide UI",
+    CurrentValue = false,
+    Callback = function(v)
+        setUIHidden(v)
+    end
+})
+
+-- DAY / NIGHT
+VisualTab:CreateToggle({
+    Name = "Night Mode",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            Lighting.ClockTime = 0
+            Lighting.Brightness = 1
+            Lighting.Ambient = Color3.fromRGB(40, 40, 60)
+            Lighting.OutdoorAmbient = Color3.fromRGB(25, 25, 40)
+        else
+            Lighting.ClockTime = 14
+            Lighting.Brightness = 2
+            Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
+        end
+    end
+})
+
+-------------------------------------------------
+-- CAMERA TAB
+-------------------------------------------------
+local CameraTab = Window:CreateTab("Camera", 4483362458)
+
+CameraTab:CreateSlider({
+    Name = "FOV",
+    Range = {70, 120},
+    Increment = 1,
+    CurrentValue = 70,
+    Callback = function(v)
+        camera.FieldOfView = v
+    end
+})
+
+CameraTab:CreateToggle({
+    Name = "Force First Person",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            player.CameraMode = Enum.CameraMode.LockFirstPerson
+        else
+            player.CameraMode = Enum.CameraMode.Classic
+        end
+    end
+})
+
+CameraTab:CreateToggle({
+    Name = "Smooth Camera",
+    CurrentValue = false,
+    Callback = function(state)
+        local hum = getHumanoid()
+
+        if state then
+            hum.CameraOffset = Vector3.new(0, 0.5, 0)
+        else
+            hum.CameraOffset = Vector3.new(0, 0, 0)
+        end
+    end
+})
+
+-------------------------------------------------
+-- GRAPHICS TAB
+-------------------------------------------------
+local GraphicsTab = Window:CreateTab("Graphics", 4483362458)
+
+GraphicsTab:CreateSlider({
+    Name = "Brightness",
+    Range = {0, 5},
+    Increment = 0.1,
+    CurrentValue = Lighting.Brightness,
+    Callback = function(v)
+        Lighting.Brightness = v
+    end
+})
+
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Parent = Lighting
+
+GraphicsTab:CreateSlider({
+    Name = "Blur",
+    Range = {0, 24},
+    Increment = 1,
+    CurrentValue = 0,
+    Callback = function(v)
+        blur.Size = v
+    end
+})
+
+local color = Instance.new("ColorCorrectionEffect")
+color.Saturation = 0
+color.Contrast = 0
+color.Parent = Lighting
+
+GraphicsTab:CreateSlider({
+    Name = "Saturation",
+    Range = {-1, 1},
+    Increment = 0.05,
+    CurrentValue = 0,
+    Callback = function(v)
+        color.Saturation = v
+    end
+})
+
+GraphicsTab:CreateSlider({
+    Name = "Contrast",
+    Range = {-1, 1},
+    Increment = 0.05,
+    CurrentValue = 0,
+    Callback = function(v)
+        color.Contrast = v
+    end
+})
+
+GraphicsTab:CreateToggle({
+    Name = "Shadows",
+    CurrentValue = true,
+    Callback = function(state)
+        Lighting.GlobalShadows = state
+    end
+})
