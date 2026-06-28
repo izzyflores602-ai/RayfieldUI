@@ -32,7 +32,7 @@ local Movement = Window:CreateTab("Movement", 4483362458)
 
 Movement:CreateSlider({
     Name = "WalkSpeed",
-    Range = {16, 50},
+    Range = {16, 500},
     Increment = 1,
     CurrentValue = 16,
     Callback = function(v)
@@ -43,7 +43,7 @@ Movement:CreateSlider({
 
 Movement:CreateSlider({
     Name = "JumpPower",
-    Range = {50, 120},
+    Range = {50, 500},
     Increment = 1,
     CurrentValue = 50,
     Callback = function(v)
