@@ -1,227 +1,178 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Players = game:GetService("Players")
-local Lighting = game:GetService("Lighting")
-local UserInputService = game:GetService("UserInputService")
-
-local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
-
--------------------------------------------------
--- WINDOW
--------------------------------------------------
 local Window = Rayfield:CreateWindow({
-    Name = "Player Settings UI",
-    LoadingTitle = "Loading...",
-    LoadingSubtitle = "Movement + Visuals + Camera + Graphics",
-    ConfigurationSaving = { Enabled = false }
+    Name = "Settings Hub",
+    LoadingTitle = "Loading UI...",
+    LoadingSubtitle = "Full Version",
+    ConfigurationSaving = { Enabled = false },
+    KeySystem = false
+})
+
+-------------------------------------------------
+-- NOTIFY
+-------------------------------------------------
+Rayfield:Notify({
+    Title = "Loaded",
+    Content = "Full Settings Hub Ready",
+    Duration = 3
 })
 
 -------------------------------------------------
 -- HELPERS
 -------------------------------------------------
 local function getHumanoid()
-    local char = player.Character or player.CharacterAdded:Wait()
-    return char:WaitForChild("Humanoid")
+    local char = game.Players.LocalPlayer.Character
+    return char and char:FindFirstChildOfClass("Humanoid")
 end
 
 -------------------------------------------------
--- MOVEMENT TAB
+-- MOVEMENT
 -------------------------------------------------
-local MovementTab = Window:CreateTab("Movement", 4483362458)
+local Movement = Window:CreateTab("Movement", 4483362458)
 
-MovementTab:CreateSlider({
-    Name = "Walk Speed",
-    Range = {16, 200},
+Movement:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {16, 50},
     Increment = 1,
     CurrentValue = 16,
     Callback = function(v)
-        getHumanoid().WalkSpeed = v
+        local hum = getHumanoid()
+        if hum then hum.WalkSpeed = v end
     end
 })
 
-MovementTab:CreateSlider({
-    Name = "Jump Power",
-    Range = {50, 300},
+Movement:CreateSlider({
+    Name = "JumpPower",
+    Range = {50, 120},
     Increment = 1,
     CurrentValue = 50,
     Callback = function(v)
         local hum = getHumanoid()
-        hum.UseJumpPower = true
-        hum.JumpPower = v
-    end
-})
-
--- Infinite Jump
-local infiniteJump = false
-
-MovementTab:CreateToggle({
-    Name = "Infinite Jump",
-    CurrentValue = false,
-    Callback = function(state)
-        infiniteJump = state
-    end
-})
-
-UserInputService.JumpRequest:Connect(function()
-    if infiniteJump then
-        getHumanoid():ChangeState(Enum.HumanoidStateType.Jumping)
-    end
-end)
-
--- Reset
-MovementTab:CreateButton({
-    Name = "Reset Character",
-    Callback = function()
-        local char = player.Character
-        if char then
-            char:BreakJoints()
+        if hum then
+            hum.UseJumpPower = true
+            hum.JumpPower = v
         end
     end
 })
 
 -------------------------------------------------
--- VISUALS TAB
+-- CAMERA
 -------------------------------------------------
-local VisualTab = Window:CreateTab("Visuals", 4483362458)
+local Camera = Window:CreateTab("Camera", 4483362458)
 
--- UI HIDE (your UI only)
-local function setUIHidden(state)
-    local pg = player:WaitForChild("PlayerGui")
-
-    for _, gui in ipairs(pg:GetChildren()) do
-        if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" then
-            gui.Enabled = not state
-        end
-    end
-end
-
-VisualTab:CreateToggle({
-    Name = "Hide UI",
-    CurrentValue = false,
-    Callback = function(v)
-        setUIHidden(v)
-    end
-})
-
--- DAY / NIGHT
-VisualTab:CreateToggle({
-    Name = "Night Mode",
-    CurrentValue = false,
-    Callback = function(state)
-        if state then
-            Lighting.ClockTime = 0
-            Lighting.Brightness = 1
-            Lighting.Ambient = Color3.fromRGB(40, 40, 60)
-            Lighting.OutdoorAmbient = Color3.fromRGB(25, 25, 40)
-        else
-            Lighting.ClockTime = 14
-            Lighting.Brightness = 2
-            Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-            Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
-        end
-    end
-})
-
--------------------------------------------------
--- CAMERA TAB
--------------------------------------------------
-local CameraTab = Window:CreateTab("Camera", 4483362458)
-
-CameraTab:CreateSlider({
+Camera:CreateSlider({
     Name = "FOV",
     Range = {70, 120},
     Increment = 1,
     CurrentValue = 70,
     Callback = function(v)
-        camera.FieldOfView = v
+        workspace.CurrentCamera.FieldOfView = v
     end
 })
 
-CameraTab:CreateToggle({
-    Name = "Force First Person",
+Camera:CreateToggle({
+    Name = "First Person",
     CurrentValue = false,
     Callback = function(state)
-        if state then
-            player.CameraMode = Enum.CameraMode.LockFirstPerson
-        else
-            player.CameraMode = Enum.CameraMode.Classic
-        end
-    end
-})
-
-CameraTab:CreateToggle({
-    Name = "Smooth Camera",
-    CurrentValue = false,
-    Callback = function(state)
-        local hum = getHumanoid()
-
-        if state then
-            hum.CameraOffset = Vector3.new(0, 0.5, 0)
-        else
-            hum.CameraOffset = Vector3.new(0, 0, 0)
-        end
+        game.Players.LocalPlayer.CameraMode =
+            state and Enum.CameraMode.LockFirstPerson or Enum.CameraMode.Classic
     end
 })
 
 -------------------------------------------------
--- GRAPHICS TAB
+-- VISUALS
 -------------------------------------------------
-local GraphicsTab = Window:CreateTab("Graphics", 4483362458)
+local Visuals = Window:CreateTab("Visuals", 4483362458)
 
-GraphicsTab:CreateSlider({
-    Name = "Brightness",
-    Range = {0, 5},
-    Increment = 0.1,
-    CurrentValue = Lighting.Brightness,
-    Callback = function(v)
-        Lighting.Brightness = v
+Visuals:CreateToggle({
+    Name = "Night Mode",
+    CurrentValue = false,
+    Callback = function(state)
+        if state then
+            game.Lighting.Brightness = 1
+            game.Lighting.ClockTime = 0
+        else
+            game.Lighting.Brightness = 2
+            game.Lighting.ClockTime = 14
+        end
     end
 })
 
-local blur = Instance.new("BlurEffect")
-blur.Size = 0
-blur.Parent = Lighting
-
-GraphicsTab:CreateSlider({
-    Name = "Blur",
-    Range = {0, 24},
-    Increment = 1,
-    CurrentValue = 0,
-    Callback = function(v)
-        blur.Size = v
-    end
-})
-
-local color = Instance.new("ColorCorrectionEffect")
-color.Saturation = 0
-color.Contrast = 0
-color.Parent = Lighting
-
-GraphicsTab:CreateSlider({
-    Name = "Saturation",
-    Range = {-1, 1},
-    Increment = 0.05,
-    CurrentValue = 0,
-    Callback = function(v)
-        color.Saturation = v
-    end
-})
-
-GraphicsTab:CreateSlider({
-    Name = "Contrast",
-    Range = {-1, 1},
-    Increment = 0.05,
-    CurrentValue = 0,
-    Callback = function(v)
-        color.Contrast = v
-    end
-})
-
-GraphicsTab:CreateToggle({
+Visuals:CreateToggle({
     Name = "Shadows",
     CurrentValue = true,
     Callback = function(state)
-        Lighting.GlobalShadows = state
+        game.Lighting.GlobalShadows = state
+    end
+})
+
+-------------------------------------------------
+-- AUDIO
+-------------------------------------------------
+local Audio = Window:CreateTab("Audio", 4483362458)
+
+Audio:CreateSlider({
+    Name = "Master Volume",
+    Range = {0, 1},
+    Increment = 0.1,
+    CurrentValue = 1,
+    Callback = function(v)
+        for _, s in ipairs(game:GetDescendants()) do
+            if s:IsA("Sound") then
+                s.Volume = v
+            end
+        end
+    end
+})
+
+-------------------------------------------------
+-- GAMEPLAY (NEW)
+-------------------------------------------------
+local Gameplay = Window:CreateTab("Gameplay", 4483362458)
+
+Gameplay:CreateToggle({
+    Name = "Show Hints",
+    CurrentValue = true,
+    Callback = function(v)
+        -- placeholder for your game UI system
+    end
+})
+
+Gameplay:CreateToggle({
+    Name = "Damage Numbers",
+    CurrentValue = true,
+    Callback = function(v)
+        -- placeholder
+    end
+})
+
+-------------------------------------------------
+-- SETTINGS (NEW)
+-------------------------------------------------
+local Settings = Window:CreateTab("Settings", 4483362458)
+
+Settings:CreateButton({
+    Name = "Reset Character",
+    Callback = function()
+        local char = game.Players.LocalPlayer.Character
+        if char then char:BreakJoints() end
+    end
+})
+
+Settings:CreateButton({
+    Name = "Rejoin",
+    Callback = function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId)
+    end
+})
+
+Settings:CreateToggle({
+    Name = "Hide UI",
+    CurrentValue = false,
+    Callback = function(state)
+        local ui = game:GetService("CoreGui"):FindFirstChildWhichIsA("ScreenGui", true)
+        if ui then
+            ui.Enabled = not state
+        end
     end
 })
